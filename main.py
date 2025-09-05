@@ -11,12 +11,15 @@ def extract_text_from_pdf(pdf_path):
     return text
 
 # Split text into chunks with overlap
-def split_text(text, chunk_size=500, overlap=50):
+def split_text(text, chunk_size=1000, overlap=100):
     chunks = []
-    for i in range(0, len(text), chunk_size - overlap):
-        chunk = text[i:i + chunk_size]
-        if chunk.strip():  # Only add non-empty chunks
+    start = 0
+    while start < len(text):
+        end = min(start + chunk_size, len(text))
+        chunk = text[start:end].strip()
+        if chunk:
             chunks.append(chunk)
+        start += chunk_size - overlap
     return chunks
 
 # Main code
@@ -24,13 +27,10 @@ client = chromadb.Client()
 ollama_ef = embedding_functions.OllamaEmbeddingFunction(model_name="nomic-embed-text:v1.5")
 
 # Create collection with Ollama embeddings
-collection = client.create_collection(
-    name="docs",
-    embedding_function=ollama_ef
-)
+collection = client.get_or_create_collection(name="docs", embedding_function=ollama_ef)
 
 # Load PDF
-pdf_text = extract_text_from_pdf("resources/syllabus.pdf")
+pdf_text = extract_text_from_pdf("idea.pdf")
 chunks = split_text(pdf_text)
 
 # Add to ChromaDB (will automatically use Ollama embeddings)
@@ -41,11 +41,14 @@ collection.add(
 
 # Query
 results = collection.query(
-    query_texts=["what are the project work activities?"],
-    n_results=3
+    query_texts=["What is the main idea of the document?"],
+    n_results=1
 )
 
 # Print results
-for doc in results["documents"][0]:
-    print(doc[:200])
-    print("---")
+# for doc in results["documents"][0]:
+#     print(doc[:2000])
+#     print("---")
+
+
+print(results["distances"])
