@@ -2,7 +2,7 @@ import chromadb
 from chromadb.utils import embedding_functions
 from PyPDF2 import PdfReader
 
-# Extract text from PDF
+
 def extract_text_from_pdf(pdf_path):
     reader = PdfReader(pdf_path)
     text = ""
@@ -10,7 +10,7 @@ def extract_text_from_pdf(pdf_path):
         text += page.extract_text()
     return text
 
-# Split text into chunks with overlap
+
 def split_text(text, chunk_size=1000, overlap=100):
     chunks = []
     start = 0
@@ -22,33 +22,63 @@ def split_text(text, chunk_size=1000, overlap=100):
         start += chunk_size - overlap
     return chunks
 
-# Main code
+
 client = chromadb.Client()
 ollama_ef = embedding_functions.OllamaEmbeddingFunction(model_name="nomic-embed-text:v1.5")
 
-# Create collection with Ollama embeddings
-collection = client.get_or_create_collection(name="docs", embedding_function=ollama_ef)
 
-# Load PDF
-pdf_text = extract_text_from_pdf("idea.pdf")
+collection = client.get_or_create_collection(
+    name="docs", 
+    embedding_function=ollama_ef
+)
+
+
+
+pdf_text = extract_text_from_pdf("resources/syllabus.pdf")
 chunks = split_text(pdf_text)
 
-# Add to ChromaDB (will automatically use Ollama embeddings)
+
 collection.add(
     documents=chunks,
     ids=[f"chunk_{i}" for i in range(len(chunks))]
 )
 
-# Query
+
+
+user_query=input("Enter the query: ")
 results = collection.query(
-    query_texts=["What is the main idea of the document?"],
-    n_results=1
+    query_texts=[user_query],
+    n_results=10
 )
 
-# Print results
-# for doc in results["documents"][0]:
-#     print(doc[:2000])
-#     print("---")
 
 
-print(results["distances"])
+# data = ""
+
+for doc in results["documents"][0]:
+   print(doc[:5000])
+   print("-----")
+    
+
+
+
+# import ollama
+
+# response = ollama.chat(
+#     model="mistral:7b",
+#     messages=[
+#         {"role": "system", "content": 
+#          "You are an AI assistant that answers questions using the context provided. "
+#          "If the answer is not in the context, say you dont know. "
+#          "Do not make up information."
+#         },
+#         {"role": "user", "content": 
+#          f"Context:\n{data}\n\nQuestion: {user_query}"
+#         }
+#     ],
+    
+# )
+
+# print(response['message']['content'])
+
+
