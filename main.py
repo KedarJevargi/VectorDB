@@ -46,6 +46,8 @@ collection.add(
 
 
 user_query=input("Enter the query: ")
+
+
 results = collection.query(
     query_texts=[user_query],
     n_results=10
@@ -58,6 +60,8 @@ results = collection.query(
 for doc in results["documents"][0]:
    print(doc[:5000])
    print("-----")
+
+   print(collection.configuration_json)
     
 
 
